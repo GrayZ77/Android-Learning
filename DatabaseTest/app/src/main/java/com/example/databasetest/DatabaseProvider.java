@@ -2,10 +2,13 @@ package com.example.databasetest;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.IntentFilter;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class DatabaseProvider extends ContentProvider {
 
@@ -34,14 +37,45 @@ public class DatabaseProvider extends ContentProvider {
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        int deleteRows = 0;
+        switch (uriMatcher.match(uri)) {
+            case BOOK_DIR:
+                deleteRows = db.delete("Book", selection, selectionArgs);
+                break;
+            case BOOK_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+                deleteRows = db.delete("Book", "id = ?", new String[]{bookId});
+                break;
+            case CATEGORY_DIR:
+                deleteRows = db.delete("Category", selection, selectionArgs);
+                break;
+            case CATEGORY_ITEM:
+                String categoryId = uri.getPathSegments().get(1);
+                deleteRows = db.delete("Category", "id = ?",
+                        new String[]{categoryId});
+                break;
+            default:
+                break;
+        }
+        return deleteRows;
     }
 
     @Override
     public String getType(Uri uri) {
         // TODO: Implement this to handle requests for the MIME type of the data
         // at the given URI.
-        throw new UnsupportedOperationException("Not yet implemented");
+        switch (uriMatcher.match(uri)) {
+            case BOOK_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.databasetest.provider.book";
+            case BOOK_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.databasetest.provider.book";
+            case CATEGORY_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.databasetest.provider.category";
+            case CATEGORY_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.databasetest.provider.category";
+        }
+        return null;
     }
 
     @Override
@@ -51,10 +85,20 @@ public class DatabaseProvider extends ContentProvider {
         switch (uriMatcher.match(uri)) {
             case BOOK_DIR:
             case BOOK_ITEM:
-                db.insert("Book", )
+                long newBookId = db.insert("Book", null, values);
+                uriReturn = Uri.parse("content://" + AUTHORITY + "/book/" + newBookId);
+                break;
+            case CATEGORY_DIR:
+            case CATEGORY_ITEM:
+                long newCategoryId = db.insert("Category", null, values);
+                uriReturn = Uri.parse("content://" + AUTHORITY + "/category/" +
+                        newCategoryId);
+                break;
+            default:
+                break;
         }
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
+
+        return uriReturn;
     }
 
     @Override
@@ -86,7 +130,7 @@ public class DatabaseProvider extends ContentProvider {
                 break;
             case CATEGORY_ITEM:
                 String categoryId = uri.getPathSegments().get(1);
-                cursor = db.query("Book", projection, "id = ?",
+                cursor = db.query("Category", projection, "id = ?",
                         new String[] {categoryId}, null, null, sortOrder);
                 break;
             default:
@@ -98,7 +142,29 @@ public class DatabaseProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        int updateRows = 0;
+        switch (uriMatcher.match(uri)) {
+            case BOOK_DIR:
+                updateRows = db.update("Book", values, selection, selectionArgs);
+                break;
+            case BOOK_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+                updateRows = db.update("Book", values, "id = ?",
+                        new String[]{bookId});
+                break;
+            case CATEGORY_DIR:
+                updateRows = db.update("Category", values, selection, selectionArgs);
+                break;
+            case CATEGORY_ITEM:
+                String categoryId = uri.getPathSegments().get(1);
+                updateRows = db.update("Category", values, "id = ?",
+                        new String[]{categoryId});
+                break;
+            default:
+                break;
+        }
+        return updateRows;
     }
 }

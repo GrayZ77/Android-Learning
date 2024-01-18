@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Button createDatabase = findViewById(R.id.create_database);
         Button addData = findViewById(R.id.add_data);
         dbhelper = new MyDatabaseHelper(this, "BookStore.db", null, 3);
