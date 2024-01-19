@@ -1,10 +1,22 @@
 package com.example.servicetest;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 
 public class MyService extends Service {
 
@@ -31,10 +43,31 @@ public class MyService extends Service {
         return mBinder;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate executed");
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE);
+        NotificationManager manager = (NotificationManager)
+                getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationChannel channel = new NotificationChannel("channel",
+                "notification_channel",NotificationManager.IMPORTANCE_DEFAULT);
+        manager.createNotificationChannel(channel);
+        Notification notification = new NotificationCompat.Builder(this, "my_notification")
+                .setContentTitle("This is content title")
+                .setContentText("this is content text")
+                .setWhen(System.currentTimeMillis())
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pi)
+                .setChannelId("channel")
+                .build();
+        startForeground(1, notification);
+
+
     }
 
     @Override
